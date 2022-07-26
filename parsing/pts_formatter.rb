@@ -107,13 +107,13 @@ class PTSFormatter
     return nil
   end
 
-  def words
+  def words(use_space_heuristic = false)
     words = []
 
     @line_hash.each do |key, line|
       next if line.cur_c.zero?
 
-      line.words.each do |w|
+      line.words(use_space_heuristic).each do |w|
         words.append({ 'word' => w[0], 'xi' => w[1], 'xf' => w[2], 'y' => key['y'] })
       end
     end

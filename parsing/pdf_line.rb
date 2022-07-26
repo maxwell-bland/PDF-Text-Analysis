@@ -32,24 +32,38 @@ class PDFLine
     end
   end
 
-  def words
+  def words(use_space_heuristic = false)
+    # Returns an array of words in the line.
+    # If use_space_heuristic is true, then words are split also 
+    # by considering whether the corresponding raw adjustment is
+    # greater than 100 quanta
+    space_char_width = 0
     word_boundaries = []
     first_char = false
     word_start = -1
     word = ''
     (0..@chars.length - 1).each do |i|
+      if @chars[i] == ' ' and i != @chars.length - 1 and space_char_width == 0  and use_space_heuristic
+        space_char_width = @x_is[i + 1].to_f - @x_is[i].to_f
+      end
+
       if @chars[i] != ' ' and not first_char
         first_char = true
         word_start = @x_is[i]
       end
 
+      # get absolute value of raw adjustment at this point
       if first_char && (@chars[i] =~ /[\s[:punct:]]/)
         word_boundaries.append([word, word_start, @x_is[i]]) if word.length >= 2
         first_char = false
         word = ''
-      end
-
-      if first_char
+        # handle space heuristic
+      elsif first_char && @raw_adjs[i].to_f.abs > space_char_width and use_space_heuristic
+        word += @chars[i]
+        word_boundaries.append([word, word_start, @x_is[i]]) if word.length >= 2
+        first_char = false
+        word = ''
+      elsif first_char
         word += @chars[i]
       end
     end
